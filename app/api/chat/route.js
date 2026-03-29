@@ -88,11 +88,12 @@ export async function POST(request) {
       .slice(-10) // Keep last 10 messages to stay within token limits
       .map((m) => ({ role: m.role, content: String(m.content).slice(0, 1000) }));
 
-    // Convert messages to Gemini format
-    const geminiMessages = safeMessages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }));
+    // Build the prompt with system instruction and conversation history
+    let fullPrompt = SYSTEM_PROMPT + '\n\n';
+    safeMessages.forEach(m => {
+      fullPrompt += `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}\n`;
+    });
+    fullPrompt += 'Assistant:';
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
@@ -100,10 +101,9 @@ export async function POST(request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: geminiMessages,
-        systemInstruction: {
-          parts: [{ text: SYSTEM_PROMPT }]
-        },
+        contents: [{
+          parts: [{ text: fullPrompt }]
+        }],
         generationConfig: {
           maxOutputTokens: 400,
           temperature: 0.7,
