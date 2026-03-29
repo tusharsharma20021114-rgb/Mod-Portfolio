@@ -1,70 +1,17 @@
 // app/api/chat/route.js
 import { NextResponse } from 'next/server';
 
-const SYSTEM_PROMPT = `You are an AI assistant embedded in Tushar Sharma's personal portfolio website. 
-Your job is to answer questions from HR professionals, recruiters, and potential employers about Tushar's background, skills, and experience. Be concise, professional, and enthusiastic about Tushar's profile.
+const SYSTEM_PROMPT = `You are an AI assistant for Tushar Sharma's portfolio. Answer questions about his skills, experience, and projects professionally and concisely.
 
-Here is Tushar's complete background:
-
-PERSONAL
-- Full name: Tushar Sharma
-- Location: Dabra, Madhya Pradesh / Gurugram (current work)
+ABOUT TUSHAR:
+- M.Tech student at IIIT Gwalior (CGPA 8.21)
+- Data Analyst/Engineer Intern at Klimashift
+- Skills: Python, ML/AI (TensorFlow, PyTorch, YOLO), AWS, PostgreSQL
+- 6 internships, 8+ projects, GATE CS 2024 qualified, 400+ LeetCode
+- Available for full-time ML Engineer, Data Scientist, or Data Engineer roles
 - Email: tusharsharma20021114@gmail.com
-- Phone: +91 96693 66748
-- LinkedIn: linkedin.com/in/tushar-sharma-4355051b5
-- GitHub: github.com/tusharsharma20021114-rgb
 
-EDUCATION
-- M.Tech in Information Technology (Wireless Network & Computing) — ABV-IIITM Gwalior, CGPA 8.21, Aug 2024 – Present
-- B.Tech in Computer Science (Data Science & ML) — ITM University Gwalior, CGPA 7.19, Aug 2020 – Jun 2024
-
-CURRENT ROLE
-- Data Analyst / Data Engineer Intern at Klimashift, Gurugram (On-site), Jan 2026 – Present
-  - Built a sanctioned load calculator (Python + PostgreSQL) optimizing load recommendations by 40%
-  - Designed NILM ML model for energy disaggregation with ETL pipelines on AWS
-  - Built automated equipment identification pipeline using YOLO, Grounding DINO, and Grounded-SAM
-  - Delivers technical reports for energy cost-saving strategies
-
-PREVIOUS EXPERIENCE
-- Teaching Assistant, ABV-IIITM Gwalior (Aug 2024 – Jan 2026): Conducted labs for 100+ students in DSA
-- RPA Developer Intern, UiPath (Sept–Nov 2023): RPA workflows with REST APIs, 80% throughput increase
-- Cloud Architect Intern, AWS Academy (May–Jul 2023): EC2, S3, VPC; reduced infra costs by 15%
-- Data Analytics Intern, Alteryx Sparked (Dec 2022–Feb 2023): Power BI dashboards, processing time from days to <1 hour
-- Java Developer Intern, Affy Informatics (Sept 2021–Jan 2022): 10+ Java Swing components, 50% productivity boost
-
-PROJECTS
-1. NILM Energy Disaggregation – Python, AWS, PostgreSQL, ETL, time-series ML
-2. Equipment Identification Pipeline – YOLO, Grounding DINO, SAM, computer vision
-3. ML Model Monitoring Pipeline – MLflow, GitHub Actions, CI/CD, MLOps
-4. Smart Attendance System – Flask, OpenCV, PostgreSQL, deep learning (92% accuracy)
-5. Credit Card Approval – Scikit-learn, SVM, Logistic Regression (94% accuracy)
-6. Supply Chain Process Analytics – Celonis EMS, SQL, ETL, process mining
-7. WSN Attack Detection – Python, anomaly detection, ML for network security
-8. Medical Store Management – Java Swing, MySQL, optimized queries (50% faster transactions)
-
-SKILLS
-- Languages: Python (primary), SQL/PL-SQL, Java, JavaScript, R
-- ML/AI: Scikit-learn, TensorFlow, PyTorch, Hugging Face, YOLO, Grounding DINO, LLMs, GANs, NLP, MLflow, OpenCV, Prompt Engineering
-- Data & Cloud: AWS (EC2, S3, VPC), Azure, PostgreSQL/MySQL, MongoDB, Apache Spark, Hadoop, Snowflake, Databricks
-- Frameworks & Tools: Flask, Django, FastAPI, Docker, Git, Power BI, Alteryx, Celonis, UiPath, Pandas, NumPy
-
-ACHIEVEMENTS
-- GATE CS 2024 Qualified
-- LeetCode 400+ problems solved
-- M.Tech CGPA 8.21 at IIIT Gwalior
-
-AVAILABILITY
-- Open to full-time ML Engineer, Data Scientist, or Data Engineer roles
-- Also open to research collaborations and freelance ML/data engineering work
-- Typically responds within 24 hours
-
-IMPORTANT RULES:
-- Answer questions about Tushar only — do not answer general coding or unrelated questions
-- Be concise (2–4 sentences per answer max unless detail is requested)
-- If asked something you don't know, say so honestly
-- If asked about salary expectations, say that's best discussed directly with Tushar
-- Never fabricate achievements or details not listed above
-- Be warm and professional — you're representing Tushar's brand`;
+Keep responses under 3 sentences unless more detail is requested.`;
 
 export async function POST(request) {
   try {
@@ -74,60 +21,76 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
-    // Check if API key is configured
     if (!process.env.GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY not configured');
       return NextResponse.json({ 
-        reply: "The chatbot is not configured yet. Please contact Tushar directly at tusharsharma20021114@gmail.com" 
+        reply: "Chatbot not configured. Contact Tushar at tusharsharma20021114@gmail.com" 
       }, { status: 200 });
     }
 
-    // Filter to only user/assistant messages (strip any system injection)
-    const safeMessages = messages
-      .filter((m) => m.role === 'user' || m.role === 'assistant')
-      .slice(-10) // Keep last 10 messages to stay within token limits
-      .map((m) => ({ role: m.role, content: String(m.content).slice(0, 1000) }));
+    // Get the last user message
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.role !== 'user') {
+      return NextResponse.json({ error: 'Invalid message format' }, { status: 400 });
+    }
 
-    // Build the prompt with system instruction and conversation history
-    let fullPrompt = SYSTEM_PROMPT + '\n\n';
-    safeMessages.forEach(m => {
-      fullPrompt += `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}\n`;
+    // Build conversation context
+    let conversationText = SYSTEM_PROMPT + '\n\nConversation:\n';
+    messages.slice(-5).forEach(msg => {
+      conversationText += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
     });
-    fullPrompt += 'Assistant:';
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         contents: [{
-          parts: [{ text: fullPrompt }]
+          parts: [{
+            text: conversationText
+          }]
         }],
         generationConfig: {
-          maxOutputTokens: 400,
           temperature: 0.7,
+          maxOutputTokens: 300,
         }
       }),
     });
 
     if (!response.ok) {
-      const err = await response.text();
-      console.error('Gemini API error:', response.status, err);
+      const errorText = await response.text();
+      console.error('Gemini API Error:', response.status, errorText);
+      
+      // Parse error for better message
+      let errorMsg = `Error ${response.status}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error?.message) {
+          errorMsg = errorJson.error.message;
+        }
+      } catch (e) {
+        // Use default error message
+      }
+      
       return NextResponse.json({ 
-        reply: `Sorry, I'm having trouble connecting to the AI service (Error ${response.status}). Please try again or contact Tushar directly at tusharsharma20021114@gmail.com` 
+        reply: `Sorry, AI service error: ${errorMsg}. Contact Tushar at tusharsharma20021114@gmail.com` 
       }, { status: 200 });
     }
 
     const data = await response.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response. Please contact Tushar directly.";
+    
+    // Extract the response text
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text 
+      || "I couldn't generate a response. Please contact Tushar directly at tusharsharma20021114@gmail.com";
 
     return NextResponse.json({ reply }, { status: 200 });
+
   } catch (error) {
     console.error('Chat route error:', error);
-    return NextResponse.json(
-      { reply: "Something went wrong. Please reach out to Tushar directly at tusharsharma20021114@gmail.com" },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      reply: "Something went wrong. Contact Tushar at tusharsharma20021114@gmail.com"
+    }, { status: 200 });
   }
 }
