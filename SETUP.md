@@ -48,9 +48,9 @@ POSTGRES_DATABASE=
 # Get free API key at https://resend.com (100 emails/day free)
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxx
 
-# Anthropic — for AI "Ask me anything" widget
-# Get at https://console.anthropic.com
-ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxx
+# Google Gemini — for AI "Ask me anything" widget (FREE!)
+# Get at https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=AIzaxxxxxxxxxxxxxxxx
 
 # HR Dashboard — set any strong password/token
 HR_DASHBOARD_TOKEN=your_strong_secret_token_here
@@ -124,7 +124,7 @@ For Vercel Postgres locally, use `@vercel/postgres` with `POSTGRES_URL` set.
 ## Troubleshooting
 
 **AI chat not responding?**
-Check `ANTHROPIC_API_KEY` is set. The widget uses `claude-haiku-4-5-20251001` (cheapest/fastest).
+Check `GEMINI_API_KEY` is set. The widget uses `gemini-1.5-flash` (free tier with generous limits).
 
 **Email not sending?**
 Check `RESEND_API_KEY`. Free tier = 100 emails/day. Contact messages still save to DB even if email fails.

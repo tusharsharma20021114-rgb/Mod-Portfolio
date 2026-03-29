@@ -80,29 +80,37 @@ export async function POST(request) {
       .slice(-10) // Keep last 10 messages to stay within token limits
       .map((m) => ({ role: m.role, content: String(m.content).slice(0, 1000) }));
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Convert messages to Gemini format
+    const geminiMessages = safeMessages.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001', // Fast + cheap for chat widget
-        max_tokens: 400,
-        system: SYSTEM_PROMPT,
-        messages: safeMessages,
+        contents: geminiMessages,
+        systemInstruction: {
+          parts: [{ text: SYSTEM_PROMPT }]
+        },
+        generationConfig: {
+          maxOutputTokens: 400,
+          temperature: 0.7,
+        }
       }),
     });
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('Anthropic API error:', err);
+      console.error('Gemini API error:', err);
       return NextResponse.json({ reply: "Sorry, I'm having trouble right now. Please try again or contact Tushar directly." }, { status: 200 });
     }
 
     const data = await response.json();
-    const reply = data.content?.[0]?.text || "I couldn't generate a response. Please contact Tushar directly.";
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response. Please contact Tushar directly.";
 
     return NextResponse.json({ reply }, { status: 200 });
   } catch (error) {
