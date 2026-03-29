@@ -74,6 +74,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
+    // Check if API key is configured
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY not configured');
+      return NextResponse.json({ 
+        reply: "The chatbot is not configured yet. Please contact Tushar directly at tusharsharma20021114@gmail.com" 
+      }, { status: 200 });
+    }
+
     // Filter to only user/assistant messages (strip any system injection)
     const safeMessages = messages
       .filter((m) => m.role === 'user' || m.role === 'assistant')
@@ -105,8 +113,10 @@ export async function POST(request) {
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('Gemini API error:', err);
-      return NextResponse.json({ reply: "Sorry, I'm having trouble right now. Please try again or contact Tushar directly." }, { status: 200 });
+      console.error('Gemini API error:', response.status, err);
+      return NextResponse.json({ 
+        reply: `Sorry, I'm having trouble connecting to the AI service (Error ${response.status}). Please try again or contact Tushar directly at tusharsharma20021114@gmail.com` 
+      }, { status: 200 });
     }
 
     const data = await response.json();
