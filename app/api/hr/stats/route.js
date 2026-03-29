@@ -12,6 +12,25 @@ export async function GET(request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Return mock data if database not configured
+  if (!process.env.POSTGRES_URL) {
+    return NextResponse.json({
+      downloads: {
+        total: 0,
+        last7d: 0,
+        last30d: 0,
+        timeline: [],
+      },
+      contacts: {
+        total: 0,
+        last7d: 0,
+        recent: [],
+        timeline: [],
+      },
+      note: 'Database not configured - showing mock data'
+    });
+  }
+
   try {
     // Total & recent resume downloads
     const { rows: dlRows } = await sql`

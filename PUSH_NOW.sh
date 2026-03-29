@@ -1,0 +1,46 @@
+#!/bin/bash
+
+echo "=========================================="
+echo "🚀 PUSHING TO GITHUB"
+echo "=========================================="
+echo ""
+echo "Current branch: main"
+echo "Commits to push: 2"
+echo ""
+echo "When prompted:"
+echo "  Username: tusharsharma20021114-rgb"
+echo "  Password: [Your GitHub Personal Access Token]"
+echo ""
+echo "Don't have a token? Get one here:"
+echo "  https://github.com/settings/tokens"
+echo ""
+echo "=========================================="
+echo ""
+
+git push origin main
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "=========================================="
+    echo "✅ PUSH SUCCESSFUL!"
+    echo "=========================================="
+    echo ""
+    echo "Next steps:"
+    echo "1. Wait 2-3 minutes for Vercel to build"
+    echo "2. Check your Vercel dashboard"
+    echo "3. Add GEMINI_API_KEY to Vercel environment variables"
+    echo "4. Test your site!"
+    echo ""
+    echo "Get Gemini API key: https://aistudio.google.com/app/apikey"
+    echo ""
+else
+    echo ""
+    echo "=========================================="
+    echo "❌ PUSH FAILED"
+    echo "=========================================="
+    echo ""
+    echo "If authentication failed, run:"
+    echo "  git remote set-url origin https://tusharsharma20021114-rgb@github.com/tusharsharma20021114-rgb/Mod-Portfolio.git"
+    echo "  git push origin main"
+    echo ""
+fi

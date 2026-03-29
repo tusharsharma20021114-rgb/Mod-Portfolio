@@ -4,11 +4,17 @@ import { NextResponse } from 'next/server';
 
 export async function POST() {
   try {
-    // Track resume download in database
-    await sql`
-      INSERT INTO resume_downloads (downloaded_at)
-      VALUES (NOW());
-    `;
+    // Track resume download in database (skip if database not configured)
+    if (process.env.POSTGRES_URL) {
+      try {
+        await sql`
+          INSERT INTO resume_downloads (downloaded_at)
+          VALUES (NOW());
+        `;
+      } catch (dbError) {
+        console.error('Database error (non-fatal):', dbError);
+      }
+    }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

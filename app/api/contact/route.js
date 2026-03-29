@@ -11,11 +11,17 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 1. Save to DB
-    await sql`
-      INSERT INTO contact_messages (name, email, subject, message)
-      VALUES (${name}, ${email}, ${subject || ''}, ${message});
-    `;
+    // 1. Save to DB (skip if database not configured)
+    if (process.env.POSTGRES_URL) {
+      try {
+        await sql`
+          INSERT INTO contact_messages (name, email, subject, message)
+          VALUES (${name}, ${email}, ${subject || ''}, ${message});
+        `;
+      } catch (dbError) {
+        console.error('Database error (non-fatal):', dbError);
+      }
+    }
 
     // 2. Send email notification via Resend
     //    Install: npm install resend
