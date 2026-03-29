@@ -1,0 +1,19 @@
+(()=>{var e={};e.id=744,e.ids=[744],e.modules={399:e=>{"use strict";e.exports=require("next/dist/compiled/next-server/app-page.runtime.prod.js")},517:e=>{"use strict";e.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},8893:e=>{"use strict";e.exports=require("buffer")},4770:e=>{"use strict";e.exports=require("crypto")},7702:e=>{"use strict";e.exports=require("events")},2048:e=>{"use strict";e.exports=require("fs")},2615:e=>{"use strict";e.exports=require("http")},8791:e=>{"use strict";e.exports=require("https")},8216:e=>{"use strict";e.exports=require("net")},9801:e=>{"use strict";e.exports=require("os")},5315:e=>{"use strict";e.exports=require("path")},6162:e=>{"use strict";e.exports=require("stream")},2452:e=>{"use strict";e.exports=require("tls")},7360:e=>{"use strict";e.exports=require("url")},1568:e=>{"use strict";e.exports=require("zlib")},3739:()=>{},3703:(e,t,r)=>{"use strict";r.r(t),r.d(t,{originalPathname:()=>m,patchFetch:()=>f,requestAsyncStorage:()=>u,routeModule:()=>c,serverHooks:()=>x,staticGenerationAsyncStorage:()=>l});var s={};r.r(s),r.d(s,{POST:()=>d});var o=r(9303),i=r(8716),a=r(670),p=r(6923),n=r(7070);async function d(e){try{let{name:t,email:r,subject:s,message:o}=await e.json();if(!t||!r||!o)return n.NextResponse.json({error:"Missing required fields"},{status:400});if(await (0,p.i6)`
+      INSERT INTO contact_messages (name, email, subject, message)
+      VALUES (${t}, ${r}, ${s||""}, ${o});
+    `,process.env.RESEND_API_KEY)try{let e=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${process.env.RESEND_API_KEY}`},body:JSON.stringify({from:"Portfolio Contact <onboarding@resend.dev>",to:["tusharsharma20021114@gmail.com"],subject:`[Portfolio] New message from ${t}: ${s||"(no subject)"}`,html:`
+              <div style="font-family:monospace;background:#030712;color:#e6edf3;padding:28px;border-radius:12px;max-width:560px">
+                <div style="color:#00f5c4;font-size:11px;letter-spacing:3px;margin-bottom:18px">// NEW PORTFOLIO CONTACT</div>
+                <table style="width:100%;border-collapse:collapse">
+                  <tr><td style="color:#7d8590;font-size:11px;padding:6px 0;width:90px">FROM</td><td style="color:#e6edf3">${t}</td></tr>
+                  <tr><td style="color:#7d8590;font-size:11px;padding:6px 0">EMAIL</td><td><a href="mailto:${r}" style="color:#00f5c4">${r}</a></td></tr>
+                  ${s?`<tr><td style="color:#7d8590;font-size:11px;padding:6px 0">SUBJECT</td><td style="color:#e6edf3">${s}</td></tr>`:""}
+                </table>
+                <div style="margin-top:20px;padding:16px;background:#0d1117;border-radius:8px;border-left:3px solid #00f5c4;color:#e6edf3;line-height:1.7">
+                  ${o.replace(/\n/g,"<br/>")}
+                </div>
+                <div style="margin-top:18px;color:#7d8590;font-size:10px">
+                  Sent via tusharsharma.dev portfolio contact form
+                </div>
+              </div>
+            `})});e.ok||console.error("Resend error:",await e.text())}catch(e){console.error("Email send error:",e)}return n.NextResponse.json({success:!0,message:"Message saved securely."},{status:200})}catch(e){return console.error("Database Error:",e),n.NextResponse.json({error:"Failed to save message"},{status:500})}}let c=new o.AppRouteRouteModule({definition:{kind:i.x.APP_ROUTE,page:"/api/chat/route",pathname:"/api/chat",filename:"route",bundlePath:"app/api/chat/route"},resolvedPagePath:"/home/tushar/Portfolio/app/api/chat/route.js",nextConfigOutput:"",userland:s}),{requestAsyncStorage:u,staticGenerationAsyncStorage:l,serverHooks:x}=c,m="/api/chat/route";function f(){return(0,a.patchFetch)({serverHooks:x,staticGenerationAsyncStorage:l})}}};var t=require("../../../webpack-runtime.js");t.C(e);var r=e=>t(t.s=e),s=t.X(0,[276,972,923],()=>r(3703));module.exports=s})();
